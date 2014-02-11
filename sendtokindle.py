@@ -22,17 +22,24 @@ from email.MIMEMultipart import MIMEMultipart
 import smtplib
 import threading
 
-from gi.repository import Gtk, Gdk, Gio, GObject, Notify
-try:
-    from gi.repository import AppIndicator3 as AppIndicator
-except:
-    from gi.repository import AppIndicator
+from gi.repository import Gtk, Gdk, Gio, GObject
+if sys.platform == 'win32':
+    import mock
+    # Not available on windows
+    Notify = mock.Mock()
+    AppIndicator = mock.Mock()
+else:
+    from gi.repository import Notify
+    try:
+        from gi.repository import AppIndicator3 as AppIndicator
+    except:
+        from gi.repository import AppIndicator
 
 
 __version__ = ('0', '5', '2')
 
 
-# TODO: This does't make much sense, since libindicator doesn't seem
+# TODO: This doesn't make much sense, since libindicator doesn't seem
 # to respect it; so we really need to install our icons system-wide,
 # even for development.
 #p =  path.normpath(path.abspath(path.join(path.dirname(__file__), 'data', 'icons')))
@@ -541,10 +548,10 @@ class Application(GObject.GObject):
         Will create the folder if it doesn't exist.
         """
         # http://standards.freedesktop.org/basedir-spec/latest/ar01s03.html
-        base = os.environ.get('XDG_CONFIG_HOME') or path.expanduser('~/.config')
+        base = os.environ.get('XDG_CONFIG_HOME') or path.expanduser(path.join('~', '.config'))
         dir = path.join(base, 'sendtokindle')
         if not path.exists(dir):
-            os.mkdir(dir)
+            os.makedirs(dir)
         return dir
 
     def set_default_config(self):
